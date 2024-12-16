@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catch the Falling Objects</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f8ff;
+      flex-direction: column;
+    }
+    canvas {
+      border: 1px solid black;
+      background-color: #ffffff;
+    }
+    h1 {
+      color: #333;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Catch the Falling Objects</h1>
+<canvas id="gameCanvas" width="480" height="320"></canvas>
+<button id="startButton">Start Game</button>
+
+<script>
+// Set up the game canvas and context
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Game variables
+let basket = { x: 200, y: 290, width: 50, height: 20, speed: 7 };
+let objects = [];
+let score = 0;
+let missedObjects = 0;
+let maxMisses = 5;
+let isGameOver = false;
+let gameStarted = false;
+
+// Key press tracking
+let keys = { left: false, right: false };
+
+// Handle key events
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft') keys.left = true;
+  if (e.key === 'ArrowRight') keys.right = true;
+});
+document.addEventListener('keyup', (e) => {
+  if (e.key === 'ArrowLeft') keys.left = false;
+  if (e.key === 'ArrowRight') keys.right = false;
+});
+
+// Generate falling objects
+function generateObject() {
+  const x = Math.random() * (canvas.width - 20);
+  const width = 20 + Math.random() * 30;
+  objects.push({ x, y: -20, width, speed: 2 + Math.random() * 3 });
+}
+
+// Update game objects and logic
+function update() {
+  if (!gameStarted) return;
+
+  if (isGameOver) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '30px Arial';
+    ctx.fillStyle = 'red';
+    ctx.fillText('Game Over! Score: ' + score, 90, canvas.height / 2);
+    ctx.fillText('Mistakes: ' + missedObjects + '/' + maxMisses, 90, canvas.height / 2 + 40);
+    document.getElementById('startButton').style.display = 'block'; // Show Start Button
+    return;
+  }
+
+  // Move the basket
+  if (keys.left && basket.x > 0) basket.x -= basket.speed;
+  if (keys.right && basket.x < canvas.width - basket.width) basket.x += basket.speed;
+
+  // Update falling objects
+  for (let i = objects.length - 1; i >= 0; i--) {
+    let object = objects[i];
+    object.y += object.speed;
+
+    // Check if object is caught by the basket
+    if (
+      object.y + 10 >= basket.y && 
+      object.y <= basket.y + basket.height &&
+      object.x + object.width > basket.x &&
+      object.x < basket.x + basket.width
+    ) {
+      score++;
+      objects.splice(i, 1); // Remove caught object
+    }
+
+    // Check if object falls out of the screen (missed object)
+    if (object.y > canvas.height) {
+      missedObjects++;
+      objects.splice(i, 1); // Remove missed object
+    }
+
+    // If the player has missed 5 objects, end the game
+    if (missedObjects >= maxMisses) {
+      isGameOver = true;
+    }
+  }
+
+  // Clear canvas and redraw everything
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw the basket
+  ctx.fillStyle = '#008000';
+  ctx.fillRect(basket.x, basket.y, basket.width, basket.height);
+
+  // Draw the falling objects
+  ctx.fillStyle = '#ff4500';
+  for (let object of objects) {
+    ctx.fillRect(object.x, object.y, object.width, 20);
+  }
+
+  // Display score and mistakes
+  ctx.font = '20px Arial';
+  ctx.fillStyle = 'black';
+  ctx.fillText('Score: ' + score, 10, 30);
+  ctx.fillText('Mistakes: ' + missedObjects + '/' + maxMisses, 350, 30);
+
+  // Request next frame
+  requestAnimationFrame(update);
+}
+
+// Start the game and set a timer to generate objects
+function startGame() {
+  score = 0;
+  missedObjects = 0;
+  isGameOver = false;
+  objects = [];
+  gameStarted = true;
+  document.getElementById('startButton').style.display = 'none'; // Hide Start Button
+  setInterval(generateObject, 1000); // Generate a new object every second
+  update(); // Start the game loop
+}
+
+// Add event listener to the Start button
+document.getElementById('startButton').addEventListener('click', startGame);
+
+</script>
+
+<br><br/>
+<br><br/>
+
+<a href="../index.html"> Back to Resume</a>
+<br>
+<br>
+<br>
+
+<a href="../html/scratch.html"> Scratch Page</a>
+</body>
+</html>
